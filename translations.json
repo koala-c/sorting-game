@@ -1,0 +1,24 @@
+{
+    "en": {
+      "message": "Numbers are correctly ordered!",
+      "restartBtn": "Play again",
+      "dragToSort": "Drag to sort the numbers",
+      "smallToLarge": "from small to large",
+      "pageTitle": "Sort numbers"
+    },
+    "es": {
+      "message": "¡Los números están ordenados correctamente!",
+      "restartBtn": "Jugar de nuevo",
+      "dragToSort": "Arrastra para ordenar los números",
+      "smallToLarge": "de menor a mayor",
+      "pageTitle": "Ordena números"
+    },
+    "ca": {
+      "message": "Els números estan ordenats correctament!",
+      "restartBtn": "Torna a jugar",
+      "dragToSort": "Arrossega per ordenar els números",
+      "smallToLarge": "de petit a gran",
+      "pageTitle": "Ordena números"
+    }
+}
+  

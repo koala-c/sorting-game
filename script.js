@@ -1,189 +1,118 @@
 $(document).ready(function () {
+    let language = 'en'; // Default language
+    let translations;
+
+    // Load translations from JSON file
+    $.ajax({
+        url: 'translations.json',
+        async: false,
+        dataType: 'json',
+        success: function (data) {
+            translations = data;
+        }
+    });
+
     let $sortableList = $('#sortable-list');
-    // Variables globals per seguir l'estat del joc
     let gameWon = false;
 
-    // Funció per generar cercles aleatoris
-    function generarCercleAleatori() {
-        // Crear un nou element div (cercle)
-        let cercle = $('<div class="circle"></div>');
+    // Function to generate a random circle
+    function generateRandomCircle() {
+        let circle = $('<div class="circle"></div>');
+        let size = Math.floor(Math.random() * (100 - 20 + 1)) + 20;
+        let x = Math.random() * (window.innerWidth - size);
+        let y = Math.random() * (window.innerHeight - size);
+        let color = Math.random() < 0.5 ? '#eadcff' : '#ffecdc';
 
-        // Generar mida aleatòria entre 20 i 100 píxels (ajusta segons les teves preferències)
-        let mida = Math.floor(Math.random() * (100 - 20 + 1)) + 20;
-
-        // Generar coordenades x i y aleatòries dins del viewport
-        let x = Math.random() * (window.innerWidth - mida);
-        let y = Math.random() * (window.innerHeight - mida);
-
-        // Agafar color aleatori #eadcff o #ffecdc
-        let color = generarColorAleatori();
-
-        // Assignar les coordenades, mida, color i afegir el cercle al body
-        cercle.css({
-            left: x + 'px',
-            top: y + 'px',
-            width: mida + 'px',
-            height: mida + 'px',
-            background: color,
-        });
-
-        // Afegir el cercle al body
-        $('body').append(cercle);
+        circle.css({ left: x + 'px', top: y + 'px', width: size + 'px', height: size + 'px', background: color });
+        $('body').append(circle);
     }
 
-    // Funció per generar un color aleatori entre dos colors
-    function generarColorAleatori() {
-        // Colors límit
-        let color1 = '#eadcff'; // Lila clar
-        let color2 = '#ffecdc'; // Groc clar
+    // Generate random circles every 2 seconds
+    setInterval(generateRandomCircle, 2000);
 
-        // Escollir aleatòriament entre els dos colors
-        let color = Math.random() < 0.5 ? color1 : color2;
-
-        return color;
+    // Function to generate an array of random numbers
+    function generateRandomNumbers() {
+        // Using Array.from to generate an array with 5 random numbers
+        return Array.from({ length: 5 }, () => Math.floor(Math.random() * 100) + 1);
     }
 
-    // Generar cercles aleatoris cada 2 segons (pots ajustar aquest interval segons les teves preferències)
-    setInterval(generarCercleAleatori, 2000);
+    // Function to display random numbers on the page
+    function displayRandomNumbers() {
+        let numbers = generateRandomNumbers();
+        $sortableList.empty().append(numbers.map(value => `<li>${value}</li>`));
 
-    // Funció per generar números aleatoris i guardar-los en un JSON
-    function generarNumerosAleatoris() {
-        let numeros = [];
-        for (let i = 1; i <= 5; i++) {
-            numeros.push(Math.floor(Math.random() * 100) + 1);
-        }
-        return numeros;
-    }
-
-    // Funció per mostrar els números aleatoris a la pàgina
-    function mostrarNumerosAleatoris() {
-        let numeros = generarNumerosAleatoris();
-        $sortableList.empty();
-
-        // Afegir els números a la llista
-        $.each(numeros, function (index, value) {
-            $sortableList.append('<li>' + value + '</li>');
-        });
-
-        // Inicialitzar els elements com a draggable només si el joc no està guanyat
+        // Make list items draggable only if the game is not won
         if (!gameWon) {
             $sortableList.find('li').draggable({
-                revert: 'invalid',  // L'element tornarà a la seva posició original si no es deixa anar al lloc correcte
-                cursor: 'grab',     // Canvia el cursor quan es fa l'arrossegament
-                zIndex: 100,        // Configurar l'índex Z per assegurar que l'element arrossegat estigui per sobre
-                helper: 'original',
-                start: function (event, ui) {
-                    $(this).addClass('grabbed');
-                },
-                stop: function (event, ui) {
-                    $(this).removeClass('grabbed');
+                revert: 'invalid', cursor: 'grab', zIndex: 100, helper: 'original',
+                start: function () { $(this).addClass('grabbed'); },
+                stop: function () { $(this).removeClass('grabbed'); }
+            }).droppable({
+                accept: 'li', tolerance: 'pointer',
+                over: function () { $(this).addClass('over'); },
+                out: function () { $(this).removeClass('over'); },
+                drop: function (event, ui) {
+                    let dropped = ui.helper, dropIndex = $(this).index();
+                    dropIndex === $sortableList.find('li').length - 1
+                        ? dropped.insertAfter($sortableList.find('li').eq(dropIndex))
+                        : dropped.insertBefore($sortableList.find('li').eq(dropIndex));
+                    dropped.removeAttr('style');
+                    checkOrder();
+                    correctlyOrdered() && $sortableList.find('li').draggable('destroy').droppable('destroy');
+                    $(this).removeClass('over');
                 }
             });
         }
 
-         // Tots els elements de la llista són ara droppables només si el joc no està guanyat
-         if (!gameWon) {
-            $sortableList.find('li').droppable({
-                accept: 'li',
-                tolerance: 'pointer',
-                over: function (event, ui) {
-                    $(this).addClass('over'); // Afegir classe quan es passa sobre un element
-                },
-                out: function (event, ui) {
-                    $(this).removeClass('over'); // Eliminar classe quan es surt de sobre un element
-                },
-                drop: function (event, ui) {
-                    let dropped = ui.helper;
-                    // Obtenir els índex de l'element arrossegat i l'element de destí
-                    // let draggedIndex = dropped.index();
-                    let dropIndex = $(this).index();
+        // Get the browser's language
+        let browserLanguage = navigator.language.substring(0, 2);
 
-                    // Verificar si és l'últim element
-                    if (dropIndex === $sortableList.find('li').length - 1) {
-                        // Insertar després de l'últim element
-                        dropped.insertAfter($sortableList.find('li').eq(dropIndex));
-                    } else {
-                        // Intercanviar les posicions dels elements a la llista
-                        dropped.insertBefore($sortableList.find('li').eq(dropIndex));
-                    }
+        // If translations for the browser language exist, use them; otherwise, fallback to 'en' (English)
+        language = translations[browserLanguage] ? browserLanguage : 'en';
 
-                    // Eliminar estils afegits pel drag
-                    dropped.removeAttr('style');
-
-                    comprovarOrdre();
-
-                    // Comprovar si l'ordre és correcte després del drop
-                    if (ordenatsCorrectament()) {
-                        // Destrueix les propietats draggable i droppable
-                        $sortableList.find('li').draggable('destroy');
-                        $sortableList.find('li').droppable('destroy');
-                    }
-
-                    $(this).removeClass('over');
-                }
-            })
-        }
-
-        $('#message').text(''); // Reiniciar el missatge
-        $('#restartBtn').hide(); // Amagar el botó de reiniciar
+        // Update messages based on the selected language
+        $('#message').text(translations[language].message);
+        $('#restartBtn').text(translations[language].restartBtn);
+        $('h1').text(translations[language].dragToSort);
+        $('h2').text(translations[language].smallToLarge);
+        document.title = translations[language].pageTitle;
     }
 
-    // Funció per comprovar si els números estan ordenats correctament
-    function comprovarOrdre() {
-        let numerosOrdenats = $('#sortable-list li').map(function () {
+    // Function to check if the numbers are in the correct order
+    function checkOrder() {
+        let orderedNumbers = $sortableList.find('li').map(function () {
             return parseInt($(this).text(), 10);
         }).get();
 
-        let ordenatsCorrectament = numerosOrdenats.slice().sort(function (a, b) {
-            return a - b;
-        }).toString() === numerosOrdenats.toString();
+        let correctlyOrdered = orderedNumbers.slice().sort((a, b) => a - b).toString() === orderedNumbers.toString();
 
-        // Mostrar el missatge corresponent
-        if (ordenatsCorrectament) {
-            $('#message').text('Els números estan correctament ordenats!');
-            $('#restartBtn').show(); // Mostrar el botó de reiniciar només si estan correctament ordenats
+        // Display the corresponding message
+        if (correctlyOrdered) {
+            $('#message').text(translations[language].message).show();
+            $('#restartBtn').show();
         } else {
-            $('#message').text('');
-            $('#restartBtn').hide();
+            $('#message, #restartBtn').hide();
         }
     }
 
-    // Funció per comprovar si els números estan ordenats correctament
-    function ordenatsCorrectament() {
-        let numerosOrdenats = $('#sortable-list li').map(function () {
+    // Function to check if the numbers are correctly ordered
+    function correctlyOrdered() {
+        let orderedNumbers = $sortableList.find('li').map(function () {
             return parseInt($(this).text(), 10);
         }).get();
 
-        for (let i = 1; i < numerosOrdenats.length; i++) {
-            if (numerosOrdenats[i - 1] > numerosOrdenats[i]) {
-                return false;
-            }
-        }
-
-        return true;
+        // Check if each number is greater than or equal to the previous one
+        return orderedNumbers.every((num, i, arr) => i === 0 || num >= arr[i - 1]);
     }
 
-    // Cridar la funció per mostrar els números quan la pàgina està carregada
-    mostrarNumerosAleatoris();
+    // Call the function to display random numbers when the page is loaded
+    displayRandomNumbers();
 
-    // Funció per reiniciar l'estat del joc
-    function reiniciarJoc() {
-        // Marcar el joc com a no guanyat
-        gameWon = false;
-
-        // Generar nous cercles aleatoris
-        generarCercleAleatori();
-
-        // Mostrar els números aleatoris a la pàgina
-        mostrarNumerosAleatoris();
-
-        // Restablir el missatge i amagar el botó de reiniciar
-        $('#message').text('');
-        $('#restartBtn').hide();
-    }
-
-    // Afegir un esdeveniment al botó de reiniciar
+    // Event handler to reset the game state
     $('#restartBtn').on('click', function () {
-        reiniciarJoc();
+        gameWon = false;
+        generateRandomCircle();
+        displayRandomNumbers();
+        $('#message, #restartBtn').hide();
     });
 });
