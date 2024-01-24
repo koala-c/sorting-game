@@ -1,5 +1,9 @@
 $(document).ready(function () {
+    const $sortableList = $('#sortable-list');
     let translations;
+    let timerValue = 0; // Initial timer value in seconds
+    let timerInterval;    
+    let gameWon = false;
 
     // Load translations from JSON file
     $.getJSON('translations.json', function (data) {
@@ -13,12 +17,12 @@ $(document).ready(function () {
 
         // Call the function to display random numbers when the page is loaded
         displayRandomNumbers();
+
+        // Start the timer
+        startTimer();
     }).fail(function () {
         console.error('Failed to load translations. Please check the translations.json file.');
     });
-
-    const $sortableList = $('#sortable-list');
-    let gameWon = false;
 
     // Function to generate a random circle
     function generateRandomCircle() {
@@ -31,9 +35,6 @@ $(document).ready(function () {
         circle.css({ left: x + 'px', top: y + 'px', width: size + 'px', height: size + 'px', background: color });
         $('body').append(circle);
     }
-
-    // Generate random circles every 2 seconds
-    setInterval(generateRandomCircle, 2000);
 
     // Function to generate an array of random numbers
     function generateRandomNumbers() {
@@ -113,6 +114,7 @@ $(document).ready(function () {
 
         // Display the corresponding message
         if (correctlyOrdered) {
+            stopTimer();
             $('#message').text(translations[language].message).show();
             $('#restartBtn').show();
         } else {
@@ -136,11 +138,48 @@ $(document).ready(function () {
         $sortableList.find('li').droppable('destroy');
     }
 
-    // Event handler to reset the game state
+    // Function to update the timer display
+    function updateTimer() {
+        const minutes = Math.floor(timerValue / 60);
+        const seconds = timerValue % 60;
+        const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        $('#timer-value').text(formattedTime);
+    }
+
+    // Start the timer when the game begins
+    function startTimer() {
+        timerInterval = setInterval(function () {
+            timerValue++;
+            updateTimer();
+        }, 1000); // Update every second (1000 milliseconds)
+    }
+
+    // Stop the timer
+    function stopTimer() {
+        clearInterval(timerInterval);
+        $('#timer-value').css('color', '#7f4ced'); // Change the text color of the timer when the game is won
+    }
+
+    // Reset the timer
+    function resetTimer() {
+        clearInterval(timerInterval);
+        timerValue = 0;
+        updateTimer();
+    }
+
+    // Generate random circles every 2 seconds
+    setInterval(generateRandomCircle, 2000);
+
+    // Event handler to reset the game state and the timer
     $('#restartBtn').on('click', function () {
         gameWon = false;
-        generateRandomCircle();
-        displayRandomNumbers();
+        resetTimer(); // Reset the timer before generating a new circle
+        $('#timer-value').css('color', '#e35a1f'); // Restore the color of the timer text
+        setTimeout(function () {
+            generateRandomCircle();
+            displayRandomNumbers();
+            startTimer();
+        }, 0); // Minimum delay to ensure that resetTimer is executed before generating the circle
         $('#message, #restartBtn').hide();
     });
 

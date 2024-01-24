@@ -10,9 +10,22 @@ html, body {
     z-index: -1;
 }
 
+#timer {
+    text-align: center;
+    background-color: #f9f7f5;
+    padding: 20px;
+    margin: 20px;
+    width: fit-content;
+    border-radius: 30px;
+    border: 1px solid #f6e1cc;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: #e35a1f;
+    font-size: 30px;
+}
+
 .parent-container {
     display: flex;
-    flex-flow: column nowrap;
+    flex-flow: row nowrap;
     justify-content: center;
     align-items: center;
     height: 100%;
