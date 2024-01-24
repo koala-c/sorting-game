@@ -112,3 +112,37 @@ img {
 #restartBtn:hover {
     background-color: #dc781a;
 }
+
+@media (max-width: 768px) {
+    /* Styles for screens with a width of 768 pixels or less (typical for tablets) */
+    .parent-container {
+        flex-flow: column nowrap;
+    }
+
+    img {
+        height: 15vw; 
+    }
+}
+
+@media (max-width: 480px) {
+    /* Styles for screens with a width of 480 pixels or less (typical for mobiles) */
+    .parent-container {
+        flex-flow: column nowrap;
+    }
+
+    img {
+        height: 25vw;
+    }
+
+    #sortable-list li {
+        font-size: 18px;
+    }
+
+    #message {
+        font-size: 16px;
+    }
+
+    #restartBtn {
+        font-size: 14px;
+    }
+}

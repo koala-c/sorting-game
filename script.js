@@ -67,11 +67,13 @@ $(document).ready(function () {
         $sortableList.find('li').draggable({
             revert: 'invalid', cursor: 'grab', zIndex: 100, helper: 'original',
             start: function () { $(this).addClass('grabbed'); },
-            stop: function () { $(this).removeClass('grabbed'); }
+            stop: function () { $(this).removeClass('grabbed'); },
+            touch: true,
         }).droppable({
             accept: 'li', tolerance: 'pointer',
             over: function () { $(this).addClass('over'); },
             out: function () { $(this).removeClass('over'); },
+            touch: true,
             drop: handleDrop
         });
     }
